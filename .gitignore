@@ -4,4 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode
+SUMOBoard-Backups/
+SUMOBoard/fp-info-cache
+SUMOBoard/fabrication-toolkit-options.json
 *.ini
