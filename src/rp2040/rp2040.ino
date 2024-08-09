@@ -8,6 +8,11 @@ ODriveArduino odrive(Serial1);
 const int mr8pin_A = 2;
 const int mr8pin_C = 3;
 
+// 基板届いたら
+// const int mr8pin_B = 4;
+// const int mr8pin_D = 5;
+
+
 volatile unsigned long startPulse[8];
 volatile int getPulse[8];
 
@@ -37,6 +42,7 @@ void chAInterupt()
   }
 }
 
+
 void chCInterupt()
 {
   unsigned long nowPulse = micros();
@@ -48,8 +54,43 @@ void chCInterupt()
   {
     getPulse[1] = nowPulse - startPulse[1];
   }
+  Serial.print("chC ");
   Serial.println(getPulse[1]);
 }
+
+
+// 基板届いたら
+// void chBInterupt()
+// {
+//   unsigned long nowPulse = micros();
+//   if (digitalRead(mr8pin_B) == HIGH)
+//   {
+//     startPulse[2] = nowPulse;
+//   }
+//   else
+//   {
+//     getPulse[2] = nowPulse - startPulse[2];
+//   }
+//   Serial.print("chB ");
+//   Serial.println(getPulse[2]);
+// }
+
+
+// void chDInterupt()
+// {
+//   unsigned long nowPulse = micros();
+//   if (digitalRead(mr8pin_D) == HIGH)
+//   {
+//     startPulse[3] = nowPulse;
+//   }
+//   else
+//   {
+//     getPulse[3] = nowPulse - startPulse[3];
+//   }
+//   Serial.print("chD ");
+//   Serial.println(getPulse[3]);
+// }
+
 
 void odriveInit()
 {
@@ -81,54 +122,26 @@ void setup()
   attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
   attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
   odriveInit();
-
-  // Serial1 << "Axis" << '0' << ": Requesting state" << requested_state << '\n';
-  // Serial1 << "Axis" << '0' << ": Requesting state" << requested_state << '\n';
-  // if (!odrive.run_state(0, requested_state, false))
-  //   return;
-  // if (!odrive.run_state(0, requested_state, false))
-  // return;
 }
 
 void loop()
 {
-  // char input = Serial.read();
-
-  // if (input == 'v')
-  // {
-  //   Serial1 << "r vbus_voltage\n";
-  //   Serial << "Vbus voltage: " << odrive.readFloat() << "\n";
-  // }
-
-  //   if (input == 'r')
-  // {
-  //   Serial1.print("sr\n");
-  //   Serial1.println("Reboot");
-  // }
-
   if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 200)) //&& getPulse[0] >= 890
   {
     digitalWrite(25, HIGH);
     odrive.SetVelocity(0, -2000);
     digitalWrite(LED_BUILTIN, HIGH);
-
-    // Serial.print(odrive.GetCountVelocity(0));
-    // Serial.println("count/s\n");
   }
   else if (getPulse[0] < (1495 - 200) && getPulse[0] >= 890) // getPulse[0] <= 2100 &&
   {
     odrive.SetVelocity(0, 2000);
     digitalWrite(LED_BUILTIN, HIGH);
-
-    // Serial.print(odrive.GetCountVelocity(0));
-    // Serial.println("count/s\n");
   }
   else
   {
     digitalWrite(25, LOW);
     odrive.SetVelocity(0, 0);
     digitalWrite(LED_BUILTIN, LOW);
-    // Serial.println("STOP"); // Motor Stop
   }
 
   if (getPulse[1] <= 2100 && getPulse[1] > (1497 + 200)) //&& getPulse[0] >= 890
@@ -136,27 +149,20 @@ void loop()
     digitalWrite(25, HIGH);
     odrive.SetVelocity(1, 2000);
     digitalWrite(LED_BUILTIN, HIGH);
-
-    // Serial.print(odrive.GetCountVelocity(1));
-    // Serial.println("count/s\n");
   }
   else if (getPulse[1] < (1495 - 200) && getPulse[1] >= 890) // getPulse[0] <= 2100 &&
   {
     odrive.SetVelocity(1, -2000);
     digitalWrite(LED_BUILTIN, HIGH);
-
-    // Serial.print(odrive.GetCountVelocity(1));
-    // Serial.println("count/s\n");
   }
   else
   {
     digitalWrite(25, LOW);
     odrive.SetVelocity(1, 0);
     digitalWrite(LED_BUILTIN, LOW);
-    // Serial.println("STOP"); // Motor Stop
   }
 
-  // Serial.print("\033[2J"); // エスケープシーケンス
-  // Serial.print("\033[H");
-  // Serial.print("\033[2B");
+  Serial.print("\033[2J"); // エスケープシーケンス
+  Serial.print("\033[H");
+  Serial.print("\033[2B");
 }
