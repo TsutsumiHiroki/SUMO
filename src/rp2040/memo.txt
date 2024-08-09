@@ -1,0 +1,203 @@
+//コンパイル時にはツール→ボードをESP32になっているか確認する
+#define RECV_PULSE_LENGTH_MIN  1000
+#define RECV_PULSE_LENGTH_MAX 2000
+
+#define CH_L_PIN 34   //コントローラ信号読み取り（左）
+#define CH_R_PIN 35   //コントローラ信号読み取り（右）
+
+int CH_L_value = 0;
+int CH_R_value = 0;
+int pattern = 0;
+
+//PWM信号ピン設定
+const int PWMH_L = A19;
+const int PHASE_L = A18;
+const int PWMH_R = A16;
+const int PHASE_R = A17;
+
+
+  int m1 = 256;//左モータ　実際の出力
+  int m2 = 256;//右モータ
+
+void setup() {
+  delay(3000); //電源が入ったら1秒待つ
+  ledcSetup(0, 16000, 8); //チャンネル|周波数|ビット
+  ledcSetup(1, 16000, 8); //チャンネル|周波数|ビット
+  
+  ledcSetup(2, 16000, 8); //チャンネル|周波数|ビット
+  ledcSetup(3, 16000, 8); //チャンネル|周波数|ビット
+
+
+ ledcAttachPin(PWMH_L, 0);//チャンネルを信号関数に接続
+ ledcAttachPin(PHASE_L, 1);
+ 
+ ledcAttachPin(PWMH_R, 2);
+ ledcAttachPin(PHASE_R, 3);
+
+ pinMode(CH_L_PIN, INPUT);
+  pinMode(CH_R_PIN, INPUT);
+
+  pinMode(PWMH_L, OUTPUT);
+  pinMode(PHASE_L, OUTPUT);
+  
+  pinMode(PWMH_R, OUTPUT);
+  pinMode(PHASE_R, OUTPUT);
+//デバック時以外は消す↓
+  Serial.begin(38400); 
+  
+}
+
+void loop() {
+
+
+    CH_L_value = pulseIn(CH_L_PIN,HIGH);
+    int Ch_L_percent = map(CH_L_value, RECV_PULSE_LENGTH_MIN, RECV_PULSE_LENGTH_MAX, -280, 255);
+    
+    CH_R_value = pulseIn(CH_R_PIN,HIGH);
+    int Ch_R_percent = map(CH_R_value, RECV_PULSE_LENGTH_MIN, RECV_PULSE_LENGTH_MAX, -340, 280);
+
+//下記のシリアル通信部分はデバック時以外は消す
+    Serial.print("CH_L_value = ");
+    Serial.print(" ( ");
+    Serial.print(Ch_L_percent);
+    Serial.println(" )"); 
+
+    Serial.print("CH_R_value = ");
+    Serial.print(" ( ");
+    Serial.print(Ch_R_percent);
+    Serial.println("  )"); 
+
+    Ch_R_percent = -Ch_R_percent; //モータ回転方向変更(右の変数の符号を変える)
+    Ch_L_percent = -Ch_L_percent;
+    
+//ESP32のPWMの値は０～２５６となるので注意すること　以前の読み取り数値は20
+      if(Ch_R_percent < -40){                   //右スティック前
+        if(Ch_L_percent < -40)                  //左スティック前
+        pattern = 7;            //前進
+        else{
+        if(Ch_L_percent > 40)                   //左スティック後
+          pattern = 6;          //左旋回
+          else 
+          pattern = 3;          //右タイヤ前進
+        }
+      }
+
+     else if(Ch_R_percent > 40){                  //右スティック後
+        if(Ch_L_percent < -40)                    //左スティック前
+        pattern = 5;          //右旋回
+        else{
+        if(Ch_L_percent > 40)                     //左スティック後
+          pattern = 8;        //後進
+          else 
+          pattern = 4;        //右タイヤ後進
+        }
+      }
+
+       else if(Ch_L_percent < -40){             //左スティック前
+        if(Ch_R_percent < -40)                  //右スティック前
+        pattern = 7;           //前進
+        else{
+        if(Ch_R_percent > 40)                   //右スティック後
+          pattern = 5;         //右旋回
+          else 
+          pattern = 1;         //左タイヤ前
+        }
+      }
+
+      else if(Ch_L_percent > 40){               //左スティック後
+        if(Ch_R_percent < -40)                  //右スティック前
+        pattern = 6;           //前進
+        else{
+        if(Ch_R_percent > 40)                   //右スティック後
+          pattern = 8;         //右旋回
+          else 
+          pattern = 2;         //左タイヤ前
+        }
+      }
+       else{
+       pattern = 0;
+       }
+
+
+       Serial.print("pattern = ");
+    Serial.print(" ( ");
+    Serial.print(pattern);
+    Serial.println("  )");    
+
+       switch(pattern){//左タイヤ制御
+    case 1:
+
+       ledcWrite(0,m1);                      //PWMH_L
+       ledcWrite(1,256);                      //PHASE_L ledcWrite(1,256); 
+       ledcWrite(2,0);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R
+
+       
+       break;
+
+    case 2:
+
+       ledcWrite(0,m1);                        //PWMH_L
+       ledcWrite(1,0);                   //PHASE_L  ledcWrite(1,0);
+       ledcWrite(2,0);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R  
+       break;
+
+    case 3:
+
+       ledcWrite(0,0);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L
+       ledcWrite(2,m2);                      //PWMH_R
+       ledcWrite(3,256);                      //PHASE_R  0
+       
+       break;
+    case 4:
+
+       ledcWrite(0,0);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L
+       ledcWrite(2,m2);                        //PWMH_R
+       ledcWrite(3,0);                   //PHASE_R   0
+        break;
+
+    case 5:
+       ledcWrite(0,m1);                      //PWMH_L
+       ledcWrite(1,256);                      //PHASE_L       ledcWrite(1,256);   
+       ledcWrite(2,m2);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R
+       break;
+
+    case 6:
+       ledcWrite(0,m1);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L   ledcWrite(1,0); 
+       ledcWrite(2,m2);                      //PWMH_R
+       ledcWrite(3,256);                      //PHASE_R
+       break;
+
+    case 7:
+       ledcWrite(0,m1);                      //PWMH_L
+       ledcWrite(1,256);                      //PHASE_L  ledcWrite(1,256); 
+       ledcWrite(2,m2);                      //PWMH_R
+       ledcWrite(3,256);                      //PHASE_R   0
+       break;
+
+    case 8:
+       ledcWrite(0,m1);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L   ledcWrite(1,0); 
+       ledcWrite(2,m2);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R   256
+       break;
+       
+      case 0:         
+       ledcWrite(2,0);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R
+       ledcWrite(0,0);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L       
+       break;
+    
+    default:         
+       ledcWrite(2,0);                      //PWMH_R
+       ledcWrite(3,0);                      //PHASE_R
+       ledcWrite(0,0);                      //PWMH_L
+       ledcWrite(1,0);                      //PHASE_L
+  }
+}
