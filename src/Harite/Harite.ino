@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "ODriveArduino.h"
 #include "ODriveEnums.h"
-#include <TaskManager.h>
+// #include <TaskManager.h>
 
 ODriveArduino odrive(Serial1);
 
@@ -111,6 +111,7 @@ void odriveInit()
   delay(10);
 }
 
+
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -119,20 +120,24 @@ void setup()
   pinMode(mr8pin_A, INPUT);
   pinMode(mr8pin_C, INPUT);
 
-  attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
-  attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(mr8pin_A), chAInterupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(mr8pin_C), chCInterupt, CHANGE);
+
+  // attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
+  // attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
   odriveInit();
 }
 
+
 void loop()
 {
-  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 200)) //&& getPulse[0] >= 890
+  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 100))
   {
     digitalWrite(25, HIGH);
     odrive.SetVelocity(0, -2000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
-  else if (getPulse[0] < (1495 - 200) && getPulse[0] >= 890) // getPulse[0] <= 2100 &&
+  else if (getPulse[0] < (1495 - 100) && getPulse[0] >= 890)
   {
     odrive.SetVelocity(0, 2000);
     digitalWrite(LED_BUILTIN, HIGH);
@@ -144,13 +149,13 @@ void loop()
     digitalWrite(LED_BUILTIN, LOW);
   }
 
-  if (getPulse[1] <= 2100 && getPulse[1] > (1497 + 200)) //&& getPulse[0] >= 890
+  if (getPulse[1] <= 2100 && getPulse[1] > (1497 + 100))
   {
     digitalWrite(25, HIGH);
     odrive.SetVelocity(1, 2000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
-  else if (getPulse[1] < (1495 - 200) && getPulse[1] >= 890) // getPulse[0] <= 2100 &&
+  else if (getPulse[1] < (1495 - 100) && getPulse[1] >= 890)
   {
     odrive.SetVelocity(1, -2000);
     digitalWrite(LED_BUILTIN, HIGH);
