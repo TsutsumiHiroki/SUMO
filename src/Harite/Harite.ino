@@ -7,11 +7,13 @@ ODriveArduino odrive(Serial1);
 
 const int mr8pin_A = 2;
 const int mr8pin_C = 3;
+uint32_t chGCentorOffset = 0;
+uint32_t chGLowerOffset = 450;
+uint32_t chGUpperOffset = 450;
 
 // 基板届いたら
 // const int mr8pin_B = 4;
 // const int mr8pin_D = 5;
-
 
 volatile unsigned long startPulse[8];
 volatile int getPulse[8];
@@ -40,8 +42,9 @@ void chAInterupt()
   {
     getPulse[0] = nowPulse - startPulse[0]; // 現在の時間(NowPulse)とstartPulseの差を求める=>パルス幅
   }
+  Serial.print("chA ");
+  Serial.println(getPulse[0]);
 }
-
 
 void chCInterupt()
 {
@@ -57,7 +60,6 @@ void chCInterupt()
   Serial.print("chC ");
   Serial.println(getPulse[1]);
 }
-
 
 // 基板届いたら
 // void chBInterupt()
@@ -75,7 +77,6 @@ void chCInterupt()
 //   Serial.println(getPulse[2]);
 // }
 
-
 // void chDInterupt()
 // {
 //   unsigned long nowPulse = micros();
@@ -90,7 +91,6 @@ void chCInterupt()
 //   Serial.print("chD ");
 //   Serial.println(getPulse[3]);
 // }
-
 
 void odriveInit()
 {
@@ -111,6 +111,27 @@ void odriveInit()
   delay(10);
 }
 
+// void rotate()
+// {
+//   if (getPulse[1] >= (1496 + chGCentorOffset))
+//   {
+//     digitalWrite(25, HIGH);
+//     odrive.SetVelocity(0, -2000);
+//     odrive.SetVelocity(1, 2000);
+//   }
+//   else if (getPulse[1] <= (1496 - chGCentorOffset))
+//   {
+//     odrive.SetVelocity(0, 2000);
+//     odrive.SetVelocity(1, -2000);
+//     digitalWrite(LED_BUILTIN, HIGH);
+//   }
+//   else
+//   {
+//     digitalWrite(25, LOW);
+//     odrive.SetVelocity(0, 0);
+//     odrive.SetVelocity(1, 0);
+//   }
+// }
 
 void setup()
 {
@@ -126,11 +147,16 @@ void setup()
   // attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
   // attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
   odriveInit();
-}
 
+  // Tasks.add([]
+  //           { rotate(); })
+  //     ->setIntervalMsec(100);
+}
 
 void loop()
 {
+  // Tasks.update();
+
   if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 100))
   {
     digitalWrite(25, HIGH);
@@ -166,8 +192,4 @@ void loop()
     odrive.SetVelocity(1, 0);
     digitalWrite(LED_BUILTIN, LOW);
   }
-
-  Serial.print("\033[2J"); // エスケープシーケンス
-  Serial.print("\033[H");
-  Serial.print("\033[2B");
 }
