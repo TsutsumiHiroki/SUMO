@@ -42,3 +42,17 @@
    
    ![alt text](image-3.png)
 
+### Githubからのクローン
+1. Code を選択し，HTTP を選択
+   ![alt text](image-4.png)
+2. URL をコピー
+   ![alt text](image-5.png)
+3. ソース管理からクローンを選択
+   ![alt text](image-6.png)
+4. コピーした URL をペースト
+   ![alt text](image-7.png)
+
+   Enter で確定
+5. 保存するディレクトリを設定
+   
+   後から見つけられるようにしておこう
