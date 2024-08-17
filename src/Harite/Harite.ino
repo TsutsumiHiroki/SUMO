@@ -1,15 +1,15 @@
 #include <Arduino.h>
 #include "ODriveArduino.h"
 #include "ODriveEnums.h"
-// #include <TaskManager.h>
+#include <TaskManager.h>
 
 ODriveArduino odrive(Serial1);
 
 const int mr8pin_A = 2;
 const int mr8pin_C = 3;
-uint32_t chGCentorOffset = 0;
-uint32_t chGLowerOffset = 450;
-uint32_t chGUpperOffset = 450;
+// uint32_t chGCentorOffset = 0;
+// uint32_t chGLowerOffset = 450;
+// uint32_t chGUpperOffset = 450;
 
 // 基板届いたら
 // const int mr8pin_B = 4;
@@ -103,12 +103,18 @@ void odriveInit()
   requested_state0 = 8;
   if (!odrive.run_state(motorNumber0, requested_state0, false))
     return;
-
   delay(10);
+
   requested_state1 = 8;
   if (!odrive.run_state(motorNumber1, requested_state1, false))
     return;
   delay(10);
+}
+
+void readVoltage()
+{
+  Serial1 << "r vbus_voltage\n";
+  Serial << "Vbus voltage: " << odrive.readFloat() << "\n";
 }
 
 // void rotate()
@@ -141,55 +147,60 @@ void setup()
   pinMode(mr8pin_A, INPUT);
   pinMode(mr8pin_C, INPUT);
 
-  attachInterrupt(digitalPinToInterrupt(mr8pin_A), chAInterupt, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(mr8pin_C), chCInterupt, CHANGE);
+  attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
+  attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
 
   // attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
   // attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
   odriveInit();
 
-  // Tasks.add([]
-  //           { rotate(); })
-  //     ->setIntervalMsec(100);
+  Tasks.add([]
+            {
+    readVoltage();
+    Serial.print("DCBusCurrent[0]: ");
+    Serial1.println(odrive.GetDcBusCurrent(0));
+    Serial.print("DCBusCurrent[1]: ");
+    Serial1.println(odrive.GetDcBusCurrent(1));
+    Serial.print("DCBusVoltage[0]: ");
+    Serial1.println(odrive.GetDcBusVoltage(0));
+    Serial.print("DCBusVoltage[1]: ");
+    Serial1.println(odrive.GetDcBusVoltage(1)); })
+      ->startFps(10);
 }
 
 void loop()
 {
-  // Tasks.update();
+  Tasks.update();
 
-  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 100))
+  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 100)) // 2100
   {
-    digitalWrite(25, HIGH);
-    odrive.SetVelocity(0, -2000);
+    odrive.SetVelocity(0, -3000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
-  else if (getPulse[0] < (1495 - 100) && getPulse[0] >= 890)
+  else if (getPulse[0] < (1495 - 100) && getPulse[0] >= 890) // 890
   {
-    odrive.SetVelocity(0, 2000);
+    odrive.SetVelocity(0, 3000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else
   {
     digitalWrite(25, LOW);
     odrive.SetVelocity(0, 0);
-    digitalWrite(LED_BUILTIN, LOW);
   }
 
   if (getPulse[1] <= 2100 && getPulse[1] > (1497 + 100))
   {
-    digitalWrite(25, HIGH);
-    odrive.SetVelocity(1, 2000);
+    odrive.SetVelocity(1, 3000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else if (getPulse[1] < (1495 - 100) && getPulse[1] >= 890)
   {
-    odrive.SetVelocity(1, -2000);
+    odrive.SetVelocity(1, -3000);
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else
   {
     digitalWrite(25, LOW);
     odrive.SetVelocity(1, 0);
-    digitalWrite(LED_BUILTIN, LOW);
   }
 }
