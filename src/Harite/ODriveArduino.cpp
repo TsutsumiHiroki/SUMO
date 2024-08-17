@@ -78,6 +78,18 @@ float ODriveArduino::GetCountVelocity(int motor_number)
     return ODriveArduino::readFloat();
 }
 
+float ODriveArduino::GetDcBusCurrent(int motor_number)
+{
+    serial_ << "r axis" << motor_number << "ibus\n";
+    return ODriveArduino::readFloat();
+}
+
+float ODriveArduino::GetDcBusVoltage(int motor_number)
+{
+    serial_ << "r axis" << motor_number <<  "vbus_voltage\n";
+    return ODriveArduino::readFloat();
+}
+
 int32_t ODriveArduino::readInt()
 {
     return readString().toInt();

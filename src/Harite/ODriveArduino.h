@@ -22,6 +22,8 @@ public:
     float GetVelocity(int motor_number);
     float GetPosition(int motor_number);
     float GetCountVelocity(int motor_number);
+    float GetDcBusCurrent(int motor_number);
+    float GetDcBusVoltage(int motor_number);
     // General params
     float readFloat();
     int32_t readInt();
