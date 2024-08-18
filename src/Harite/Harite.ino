@@ -7,9 +7,11 @@ ODriveArduino odrive(Serial1);
 
 const int mr8pin_A = 2;
 const int mr8pin_C = 3;
+const int mr8pin_F = 4;
 // uint32_t chGCentorOffset = 0;
 // uint32_t chGLowerOffset = 450;
 // uint32_t chGUpperOffset = 450;
+uint32_t offsetMc8 = 100;
 
 // 基板届いたら
 // const int mr8pin_B = 4;
@@ -42,8 +44,8 @@ void chAInterupt()
   {
     getPulse[0] = nowPulse - startPulse[0]; // 現在の時間(NowPulse)とstartPulseの差を求める=>パルス幅
   }
-  Serial.print("chA ");
-  Serial.println(getPulse[0]);
+  // Serial.print("chA ");
+  // Serial.println(getPulse[0]);
 }
 
 void chCInterupt()
@@ -57,8 +59,21 @@ void chCInterupt()
   {
     getPulse[1] = nowPulse - startPulse[1];
   }
-  Serial.print("chC ");
-  Serial.println(getPulse[1]);
+  // Serial.print("chC ");
+  // Serial.println(getPulse[1]);
+}
+
+void chFInterupt()
+{
+  unsigned long nowPluse = micros();
+  if (digitalRead(mr8pin_F) == HIGH)
+  {
+    startPulse[2] = nowPluse;
+  }
+  else
+  {
+    getPulse[2] = nowPluse - startPulse[2];
+  }
 }
 
 // 基板届いたら
@@ -117,6 +132,12 @@ void readVoltage()
   Serial << "Vbus voltage: " << odrive.readFloat() << "\n";
 }
 
+void readCurrent()
+{
+  Serial1 << "r ibus\n";
+  Serial << "Vbus Current: " << odrive.readFloat() << "\n";
+}
+
 // void rotate()
 // {
 //   if (getPulse[1] >= (1496 + chGCentorOffset))
@@ -146,9 +167,11 @@ void setup()
   Serial1.begin(115200);
   pinMode(mr8pin_A, INPUT);
   pinMode(mr8pin_C, INPUT);
+  pinMode(mr8pin_F, INPUT);
 
   attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
   attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
+  attachInterrupt(mr8pin_F, chFInterupt, CHANGE);
 
   // attachInterrupt(mr8pin_A, chAInterupt, CHANGE);
   // attachInterrupt(mr8pin_C, chCInterupt, CHANGE);
@@ -156,30 +179,31 @@ void setup()
 
   Tasks.add([]
             {
-    readVoltage();
-    Serial.print("DCBusCurrent[0]: ");
-    Serial1.println(odrive.GetDcBusCurrent(0));
-    Serial.print("DCBusCurrent[1]: ");
-    Serial1.println(odrive.GetDcBusCurrent(1));
-    Serial.print("DCBusVoltage[0]: ");
-    Serial1.println(odrive.GetDcBusVoltage(0));
-    Serial.print("DCBusVoltage[1]: ");
-    Serial1.println(odrive.GetDcBusVoltage(1)); })
-      ->startFps(10);
+    // Serial.print("DCBusCurrent[0]: ");
+    // Serial.println(odrive.GetDcBusCurrent(0));
+    // Serial.print("DCBusCurrent[1]: ");
+    // Serial.println(odrive.GetDcBusCurrent(1));
+    // Serial.print("DCBusVoltage[0]: ");
+    // Serial.println(odrive.GetDcBusVoltage(0));
+    // Serial.print("DCBusVoltage[1]: ");
+    // Serial.println(odrive.GetDcBusVoltage(1));
+    readCurrent();
+    readVoltage(); })
+      ->startFps(100);
 }
 
 void loop()
 {
   Tasks.update();
 
-  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + 100)) // 2100
+  if (getPulse[0] <= 2100 && getPulse[0] > (1497 + offsetMc8)) // 2100
   {
-    odrive.SetVelocity(0, -3000);
+    odrive.SetVelocity(0, -3000, 0.6);
     digitalWrite(LED_BUILTIN, HIGH);
   }
-  else if (getPulse[0] < (1495 - 100) && getPulse[0] >= 890) // 890
+  else if (getPulse[0] < (1495 - offsetMc8) && getPulse[0] >= 890) // 890
   {
-    odrive.SetVelocity(0, 3000);
+    odrive.SetVelocity(0, 3000, 0.6);
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else
@@ -188,19 +212,24 @@ void loop()
     odrive.SetVelocity(0, 0);
   }
 
-  if (getPulse[1] <= 2100 && getPulse[1] > (1497 + 100))
+  if (getPulse[1] <= 2100 && getPulse[1] > (1497 + offsetMc8))
   {
-    odrive.SetVelocity(1, 3000);
+    odrive.SetVelocity(1, 3000, 0.6);
     digitalWrite(LED_BUILTIN, HIGH);
   }
-  else if (getPulse[1] < (1495 - 100) && getPulse[1] >= 890)
+  else if (getPulse[1] < (1495 - offsetMc8) && getPulse[1] >= 890)
   {
-    odrive.SetVelocity(1, -3000);
+    odrive.SetVelocity(1, -3000, 0.6);
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else
   {
     digitalWrite(25, LOW);
     odrive.SetVelocity(1, 0);
+  }
+
+  if (1496 <= getPulse[2] && getPulse[2] <= 1995)
+  {
+    Serial1.print("sr\n");
   }
 }
