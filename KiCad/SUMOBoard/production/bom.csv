@@ -1,4 +1,9 @@
 ﻿Designator,Footprint,Quantity,Value,LCSC Part #
-J5,PinHeader_1x20_P2.54mm_Vertical,1,Conn_01x20_Pin,
-U1,RPi_Pico_SMD_TH,1,Pico,
-"mr8-A, mr8-B, mr8-C, mr8-D",JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,4,Conn_01x03_Socket,
+"D1, D4",D_SMA_Handsoldering,2,D,
+"D2, D3",0603,2,LED,
+"J1, J4",JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,2,Conn_01x03,
+"J3, J6",JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2,Conn_01x02,
+J7,PinHeader_1x19_P2.54mm_Vertical,1,Conn_01x19_Pin,
+"R1, R2",0603,2,R,
+U1,0AS1R5-4805,1,~,
+U2,RPi_Pico_SMD_TH,1,Pico,
