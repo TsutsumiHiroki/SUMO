@@ -55,6 +55,11 @@ void ODriveArduino::TrapezoidalMove(int motor_number, float position)
     serial_ << "t " << motor_number << " " << position << "\n";
 }
 
+void ODriveArduino::InputTorque(int motor_number, float torque)
+{
+    serial_ << "w axis" << motor_number << ".controller.input_torque" << torque << "\n";
+}
+
 float ODriveArduino::readFloat()
 {
     return readString().toFloat();

@@ -17,6 +17,7 @@ public:
     void SetVelocity(int motor_number, float velocity);
     void SetVelocity(int motor_number, float velocity, float current_feedforward);
     void SetCurrent(int motor_number, float current);
+    void InputTorque(int motor_number, float torque);
     void TrapezoidalMove(int motor_number, float position);
     // Getters
     float GetVelocity(int motor_number);
